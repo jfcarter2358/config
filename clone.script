@@ -1,0 +1,62 @@
+#! /usr/bin/env calligraphy
+
+# type: ignore
+
+import argparse
+import json
+import os
+
+def do_clone(args):
+    here = os.path.dirname(os.path.abspath(__file__))
+    with open(f'/home/jcarter2010/helpers/data/clone.json', 'r', encoding='utf-8') as data_file:
+        data = json.load(data_file) 
+
+    org_data = {}
+    for org in data:
+        if args.org in org["aliases"]:
+            org_data = org
+            break
+    if not org_data:
+        raise KeyError(f"Organization {args.org} is not defined in data file")
+    
+    target = args.target
+
+    if args.source != 'main' and args.target == 'main':
+        target = args.source
+
+    base_dir = org_data["base_dir"]
+    org_name = org_data["org"]
+    org_url  = org_data["url"]
+    org_user = org_data["user"]
+
+    cd {base_dir}
+    
+    escaped_branch = args.target.replace('/', '_')
+    mkdir -p {escaped_branch}
+    
+    cd {escaped_branch}
+
+    try:
+        git clone -b {args.source} git@{org_url}:{org_name}/{args.repo}
+    except:
+        print(f"Unable to clone {args.repo} at {args.source}")
+    try:
+        cd {args.repo}
+        if args.source != target:
+            git checkout -b {target} 
+    except Exception as e:
+        print(e)
+
+    if args.code:
+        code .
+
+parser = argparse.ArgumentParser(prog="clone")
+parser.add_argument('-o', '--org', help='Organization to clone from.', required=True)
+parser.add_argument('-r', '--repo', help='Repository name to clone.', required=True)
+parser.add_argument('-s', '--source', help='Name of the branch to clone from. Defaults to "main"', default='main')
+parser.add_argument('-t', '--target', help='Name of the branch to checkout. Defaults to "main"', default='main')
+parser.add_argument('-c', '--code', action='store_true', help='Should VS code be opened in the repo.')
+
+args = parser.parse_args()
+        
+do_clone(args)

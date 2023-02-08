@@ -1,0 +1,131 @@
+#! /usr/bin/env calligraphy
+
+# type: ignore
+
+import argparse
+import json
+import os
+import multiwidth
+import re
+import sys
+
+HOME = os.path.expanduser("~")
+
+def process_args(args):
+    if args.command == "get":
+        k8s_get(args)
+    elif args.command == "delete":
+        k8s_delete(args)
+    elif args.command == "list":
+        k8s_list_images(args)
+
+def k8s_get(args):
+    name = args.name
+    if args.fuzzy:
+        name = f'.*{name}.*'
+
+    objects = {
+        "p": "pod",
+        "d": "deployment",
+        "r": "replicaset",
+        "s": "statefulset",
+        "v": "pvc"
+    }
+    kubectl_command = f"kubectl get {objects[args.object]}"
+    if args.all_namespaces:
+        kubectl_command += " --all-namespaces"
+    else:
+        if args.namespace:
+            kubectl_command += f" -n {args.namespace}"
+
+    output = ?({kubectl_command})
+
+    data = multiwidth.loads(output, output_json=True)
+
+    data = [item for item in data if re.match(name, item["NAME"])]
+
+    if args.filter:
+        filter_key, filter_val = args.filter.split("=")
+        filter_key = filter_key.strip()
+        filter_val = filter_val.strip()
+
+        data = [item for item in data if item[filter_key] == filter_val]
+
+    if len(data) == 0:
+        print("No matches found", file=sys.stderr)
+        sys.exit(1)
+
+    if args.index >= 0:
+        print(data[args.index]['NAME'])
+    else:
+        for item in data:
+            print(item['NAME'])
+
+def k8s_delete(args):
+    if args.status == "evicted":
+        kubectl get pods | grep Evicted | awk '{print $1}' | xargs kubectl delete pod
+    elif args.status == "error":
+        kubectl get pods | grep Error | awk '{print $1}' | xargs kubectl delete pod
+    elif args.status == "pending":
+        kubectl get pods | grep Pending | awk '{print $1}' | xargs kubectl delete pod
+
+def k8s_list_images(args):
+    command = 'kubectl get pods -o jsonpath="{.items[*].spec.containers[*].image}"'
+    if args.all_namespaces:
+        command += ' --all-namespaces'
+    elif args.namespace:
+        command += f' -n {args.namespace}'
+    
+    command += " | tr -s '[[:space:]]' '\n' | sort"
+
+    {command}
+
+def process_eks_args(args):
+    if args.subcommand == "prune":
+        eks_prune(args)
+
+def eks_prune(args):
+    print('TODO')
+    # CLUSTER=$1
+    # for NODEGROUP in $(aws eks list-nodegroups --cluster-name ${CLUSTER} | jq -r ".nodegroups[]"); do
+    #         echo "Pruning docker in nodegroup ${NODEGROUP}"
+    #         AUTO_SCALING_GROUP=$(aws eks describe-nodegroup --cluster-name ${CLUSTER} --nodegroup-name ${NODEGROUP} | jq -r ".nodegroup.resources.autoScalingGroups[0].name")
+    #         for EC2 in $(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names ${AUTO_SCALING_GROUP} | jq -c ".AutoScalingGroups[0].Instances[]"); do
+    #                 INSTANCE=$(echo "${EC2}" | jq -r ".InstanceId")
+    #                 PUBLIC_DNS_NAME=$(aws ec2 describe-instances --instance-ids ${INSTANCE} | jq -r ".Reservations[0].Instances[0].PublicDnsName")
+    #                 echo "Pruning instance ${INSTANCE} at ${PUBLIC_DNS_NAME}"
+    #                 ssh -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null -i ~/.ssh/mocaaswarm.pem -t ec2-user@${PUBLIC_DNS_NAME} "docker system prune -a -f"
+    #         done
+    # done
+
+
+parser = argparse.ArgumentParser(prog="k8s")
+
+subparsers = parser.add_subparsers(dest="command")
+
+parser_get = subparsers.add_parser('get')
+parser_get.add_argument('object', help='K8s object type to get: (p)od, (r)eplicaset, (d)eployment, (s)tatefulset, p(v)c', choices=["p", "r", "d", "s", "v"])
+parser_get.add_argument('name', help='Name regex to search for')
+parser_get.add_argument('-i', '--index', help='index of the result to return if there are multiple, defaults to 0. Set to -1 to print all matches.', type=int, default=0)
+parser_get.add_argument('-n', '--namespace', help="Namespace to look for the object in, if not set then the current namespace will be used.")
+parser_get.add_argument('-a', '--all-namespaces', action="store_true", help="Should all namespaces be looked in, overrides the namespace option.")
+parser_get.add_argument('-f', '--filter', help="Filter string to sort returned object by with the format KEY=VALUE, e.g. STATUS=Running.")
+parser_get.add_argument('-z', '--fuzzy', action='store_false', help="Fuzzy search for names (add '.*' to beginning and end of pattern). Defaults to 'True', add flag to set to 'False'.")
+
+parser_delete = subparsers.add_parser('delete')
+parser_delete.add_argument('status', help='Pod status to delete', choices=["evicted", "error", "pending"])
+
+parser_list_images = subparsers.add_parser('list')
+parser_list_images.add_argument('-n', '--namespace', help="Namespace to look for the object in, if not set then the current namespace will be used.")
+parser_list_images.add_argument('-a', '--all-namespaces', action="store_true", help="Should all namespaces be looked in, overrides the namespace option.")
+
+parser_eks = subparsers.add_parser('eks')
+subparsers_eks = parser_eks.add_subparsers(dest="subcommand")
+
+parser_eks_prune = subparsers_eks.add_parser('prune')
+parser_eks_prune.add_argument('-c', '--cluster', help="EKS cluster to prune", required=True)
+parser_eks_prune.add_argument('-k', '--key', help="Path to SSH key file to use to connect to nodes", required=True)
+
+args = parser.parse_args()
+
+process_args(args)

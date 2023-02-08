@@ -1,0 +1,127 @@
+function empty_commit ()
+{
+	git commit --amend --no-edit
+}
+
+function k8s ()
+{
+        ~/.pyenv/versions/helpers/bin/calligraphy ~/helpers/infra.script $@
+}
+
+function clone ()
+{
+        ~/.pyenv/versions/helpers/bin/calligraphy ~/helpers/clone.script $@
+}
+
+function cred () 
+{
+        ~/.pyenv/versions/helpers/bin/calligraphy ~/helpers/cred.script $@
+}
+
+function get_running ()
+{
+        TOTAL_TEMP=$(kubectl get pods | wc -l)
+        RUNNING=$(kubectl get pods | grep Running | wc -l)
+        TOTAL="$(($TOTAL_TEMP-1))"
+        echo "${RUNNING} of ${TOTAL} are in 'Running' state"
+}
+
+function unset_aws_envs ()
+{
+        for ID in $(env | grep AWS | cut -d '=' -f 1);
+        do
+        unset "${ID}";
+        done
+}
+
+function nuke_ns {
+        NS=$1
+        kubectl get ns ${NS} -o json > ${NS}.json && vim ${NS}.json && kubectl replace --raw "/api/v1/namespaces/${NS}/finalize" -f ./${NS}.json
+}
+
+function k_illitwithfire {
+	k delete all --all \
+	&& k delete cm --all \
+	&& k delete pvc --all \
+	&& k delete secret --all \
+	&& k delete ing --all
+}
+
+function export_kubeconfig {
+        export KUBECONFIG=$(pwd)/kubeconfig
+        echo "KUBECONFIG set to '${KUBECONFIG}'"
+}
+
+function write_kubeconfig {
+        cat terraform_output.json | jq -r '.kubeconfig_base64' | base64 -d > kubeconfig
+        echo "Kubeconfig written out to 'kubeconfig'"
+}
+
+function traefik_dashboard {
+        POD_NAME=$(kubectl get pods -n traefik | grep traefik | head -n 1 | awk '{print $1}')
+        kubectl port-forward ${POD_NAME} -n traefik 9000:9000
+}
+
+# Kubernetes
+alias k='kubectl'
+alias wk='watch kubectl'
+alias kc='kubectx'
+alias kn='kubens'
+alias k-illitwithfire='k delete all --all && k delete cm --all && k delete pvc --all && k delete secret --all && k delete ing --all'
+alias knukens='nuke_ns'
+alias ekconf='export_kubeconfig'
+alias wkconf='write_kubeconfig'
+
+# Traefik
+alias td='traefik_dashboard'
+
+# Directory shortcuts
+alias _modelop='cd ~/modelop'
+alias _personal='cd ~/personal'
+alias _scratch='cd ~/scratch'
+alias _leapyear='cd ~/leapyear'
+alias _snowflake='cd ~/snowflake'
+alias _code='cd ~/leapyear/code'
+alias _projects='cd ~/personal/projects'
+alias _helpers='cd ~/helpers'
+
+# Pyenv
+alias p='pyenv'
+alias pd='pyenv deactivate'
+alias pa='pyenv activate'
+alias pv='pyenv virtualenv'
+alias pvd='pyenv virtualenv-delete'
+alias pvs='pyenv virtualenvs'
+alias pi='CC="/usr/bin/gcc" LDFLAGS="-L/usr/local/openssl/lib" CPPFLAGS="-I/usr/local/openssl/include" PKG_CONFIG_PATH="/usr/local/openssl/pkgconfig" CONFIGURE_OPTS="-with-openssl=/usr/local/openssl" pyenv install -v'
+
+# Terminal
+alias list='tree -L 2'
+
+# Shellcheck
+alias shck='shellcheck -s bash -o all'
+
+# Goenv
+alias go='~/.goenv/shims/go'
+alias gofmt='~/.goenv/shims/gofmt'
+
+# Stormfront
+alias sf='stormfront'
+
+# Terraform
+alias tf='terraform'
+
+# Curl
+alias curlj='curl -H "Content-Type: application/json"'
+
+# Git
+alias emptycommit='empty_commit'
+
+# Vim
+alias vim='vim -S ~/helpers/vim/.vimrc'
+
+# Vim mode for terminal
+# set -o vi
+
+# ZSH
+alias _rc='vim -S ~/helpers/vim/.vimrc ~/.zshrc'
+alias _sc='source ~/.zshrc'

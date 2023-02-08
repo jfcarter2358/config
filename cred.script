@@ -1,0 +1,49 @@
+#! /usr/bin/env calligraphy
+
+# type: ignore
+
+import argparse
+import json
+import os
+import sys
+
+HOME = os.path.expanduser("~")
+
+def process_args(args):
+    if args.subcommand == 'list':
+        with open(f'{HOME}/helpers/data/cred.json', 'r', encoding='utf-8') as data_file:
+            data = json.load(data_file)
+
+        for service in data:
+            print(service)
+            for alias in data[service]:
+                print(f'    {alias}')
+
+    elif args.subcommand == 'get':
+        with open(f'{HOME}/helpers/data/cred.json', 'r', encoding='utf-8') as data_file:
+            data = json.load(data_file)
+
+        if not args.service in data:
+            print(f"ERROR: Service {args.service} does not exist in data file, valid services are {data.keys()}")
+            sys.exit(1)
+
+        if not args.alias in data[args.service]:
+            print(f"ERROR: Alias {args.alias} does not exist in data file, valid aliases are {data[args.service].keys()}")
+            sys.exit(1)
+        
+        print(data[args.service][args.alias][args.field])
+
+parser = argparse.ArgumentParser(prog="cred")
+
+subparsers = parser.add_subparsers(dest="subcommand")
+
+parser_get = subparsers.add_parser('get')
+parser_get.add_argument('service', help='The service to grab a credential for')
+parser_get.add_argument('alias', help='The credential alias for the service')
+parser_get.add_argument('field', help='The field to grab for the credential', choices=["username", "password"])
+
+parser_list = subparsers.add_parser('list')
+
+args = parser.parse_args()
+
+process_args(args)
