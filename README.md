@@ -9,8 +9,6 @@ First, create your secrets files with:
 ```bash
 vim ./shell/.personal.private
 # Add any credentials you want stored as env variables for personal use to this file
-vim ./shell/.leapyear.private
-# Add and LeapYear specific credentials to be stored as env variables to this file
 ```
 
 Then add the shell files files to your `~/.{zsh,bash}rc` file, run the following command:
@@ -23,7 +21,6 @@ source ~/helpers/shell/.rc
 
 # Source credentials
 source ~/helpers/shell/.personal.private
-source ~/helpers/shell/.leapyear.private
 EOF
 ```
 
@@ -34,14 +31,10 @@ Create a credential json file with the following structure in `data/cred.json`
     // Service that this credential is for
     "github": {
         // Org that this credential is for
-        "jc": {
+        "personal": {
             "username": "my github username",
             "password": "my github password"
         },
-        "ly": {
-            "username": "my ly github username",
-            "password": "my ly github password"
-        }
     },
     "aws": {
         ...
@@ -71,8 +64,8 @@ Create a repo file with the following structure in `data/clone.json`
 Create an environment via pyenv:
 
 ```bash
-pyenv virtualenv helpers
-pyenv activate helpres
+pyenv virtualenv 3.10.0 helpers
+pyenv activate helpers
 pip install -r requirements.txt
 pyenv deactivate
 ```
