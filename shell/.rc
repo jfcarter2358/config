@@ -76,12 +76,8 @@ alias wkconf='write_kubeconfig'
 alias td='traefik_dashboard'
 
 # Directory shortcuts
-alias _modelop='cd ~/modelop'
 alias _personal='cd ~/personal'
 alias _scratch='cd ~/scratch'
-alias _leapyear='cd ~/leapyear'
-alias _snowflake='cd ~/snowflake'
-alias _code='cd ~/leapyear/code'
 alias _projects='cd ~/personal/projects'
 alias _helpers='cd ~/helpers'
 

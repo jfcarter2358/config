@@ -6,9 +6,10 @@ import argparse
 import json
 import os
 
+HOME = os.path.expanduser("~")
+
 def do_clone(args):
-    here = os.path.dirname(os.path.abspath(__file__))
-    with open(f'/home/jcarter2010/helpers/data/clone.json', 'r', encoding='utf-8') as data_file:
+    with open(f'{HOME}/helpers/data/clone.json', 'r', encoding='utf-8') as data_file:
         data = json.load(data_file) 
 
     org_data = {}
