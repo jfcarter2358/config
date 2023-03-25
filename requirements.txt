@@ -1,0 +1,2 @@
+calligraphy-scripting==1.1.2
+multiwidth==1.0.1
