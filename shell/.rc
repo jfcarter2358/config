@@ -77,9 +77,6 @@ alias changelog='cat ~/.helpers/prompts/changelog.md | pbcopy'
 alias review='cat ~/.helpers/prompts/review.md | pbcopy'
 alias implementation='cat ~/.helpers/prompts/implementation.md | pbcopy'
 
-export ANTHROPIC_API_KEY_2=''
-export BRAVE_API_KEY=''
-
 # pyenv
 export PYENV_ROOT="$HOME/.pyenv"
 [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
