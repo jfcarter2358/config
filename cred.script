@@ -11,7 +11,7 @@ HOME = os.path.expanduser("~")
 
 def process_args(args):
     if args.subcommand == 'list':
-        with open(f'{HOME}/helpers/data/cred.json', 'r', encoding='utf-8') as data_file:
+        with open(f'{HOME}/.helpers/data/cred.json', 'r', encoding='utf-8') as data_file:
             data = json.load(data_file)
 
         for service in data:
@@ -20,7 +20,7 @@ def process_args(args):
                 print(f'    {alias}')
 
     elif args.subcommand == 'get':
-        with open(f'{HOME}/helpers/data/cred.json', 'r', encoding='utf-8') as data_file:
+        with open(f'{HOME}/.helpers/data/cred.json', 'r', encoding='utf-8') as data_file:
             data = json.load(data_file)
 
         if not args.service in data:
@@ -40,7 +40,7 @@ subparsers = parser.add_subparsers(dest="subcommand")
 parser_get = subparsers.add_parser('get')
 parser_get.add_argument('service', help='The service to grab a credential for')
 parser_get.add_argument('alias', help='The credential alias for the service')
-parser_get.add_argument('field', help='The field to grab for the credential', choices=["username", "password"])
+parser_get.add_argument('field', help='The field to grab for the credential')
 
 parser_list = subparsers.add_parser('list')
 

@@ -32,6 +32,7 @@ Create a credential json file with the following structure in `data/cred.json`
     "github": {
         // Org that this credential is for
         "personal": {
+            // Data to store
             "username": "my github username",
             "password": "my github password"
         },

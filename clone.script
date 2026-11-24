@@ -9,7 +9,7 @@ import os
 HOME = os.path.expanduser("~")
 
 def do_clone(args):
-    with open(f'{HOME}/helpers/data/clone.json', 'r', encoding='utf-8') as data_file:
+    with open(f'{HOME}/.helpers/data/clone.json', 'r', encoding='utf-8') as data_file:
         data = json.load(data_file) 
 
     org_data = {}
@@ -20,6 +20,7 @@ def do_clone(args):
     if not org_data:
         raise KeyError(f"Organization {args.org} is not defined in data file")
     
+    print('got org data')
     target = args.target
 
     if args.source != 'main' and args.target == 'main':
@@ -29,6 +30,9 @@ def do_clone(args):
     org_name = org_data["org"]
     org_url  = org_data["url"]
     org_user = org_data["user"]
+    ssh_key  = org_data["ssh_key_path"]
+
+    print(f'got org values: {base_dir}, {org_name}, {org_url}, {org_user}, {ssh_key}')
 
     cd {base_dir}
     
@@ -37,10 +41,11 @@ def do_clone(args):
     
     cd {escaped_branch}
 
-    try:
-        git clone -b {args.source} git@{org_url}:{org_name}/{args.repo}
-    except:
-        print(f"Unable to clone {args.repo} at {args.source}")
+    # try:
+    echo "GIT_SSH_COMMAND='ssh -i {ssh_key} -o IdentitiesOnly=yes' git clone -b {args.source} git@{org_url}:{org_name}/{args.repo}"
+    GIT_SSH_COMMAND='ssh -i {ssh_key} -o IdentitiesOnly=yes' git clone -b {args.source} git@{org_url}:{org_name}/{args.repo}
+    # except:
+    #     print(f"Unable to clone {args.repo} at {args.source}")
     try:
         cd {args.repo}
         if args.source != target:
@@ -56,8 +61,8 @@ parser.add_argument('-o', '--org', help='Organization to clone from.', required=
 parser.add_argument('-r', '--repo', help='Repository name to clone.', required=True)
 parser.add_argument('-s', '--source', help='Name of the branch to clone from. Defaults to "main"', default='main')
 parser.add_argument('-t', '--target', help='Name of the branch to checkout. Defaults to "main"', default='main')
-parser.add_argument('-c', '--code', action='store_true', help='Should VS code be opened in the repo.')
+parser.add_argument('-c', '--code', action='store_true', help='Should neovim be opened in the repo.')
 
 args = parser.parse_args()
-        
+       
 do_clone(args)
